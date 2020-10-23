@@ -1,0 +1,28 @@
+{
+  "name": "nelson",
+  "version": "1.0.0",
+  "description": "Spotify recommendations jukebox",
+  "main": "server.js",
+  "dependencies": {
+    "bluebird": "^3.7.2",
+    "express": "^4.15.4",
+    "querystring": "^0.2.0",
+    "request": "^2.81.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:arirawr/nelson.git"
+  },
+  "keywords": [
+    "spotify",
+    "music",
+    "recommendations"
+  ],
+  "author": "Arielle Vaniderstine",
+  "license": "ISC"
+}
