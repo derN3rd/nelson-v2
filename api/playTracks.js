@@ -13,10 +13,11 @@ module.exports = async ({ token, deviceId, tracks }) =>
     /** @type {request.UrlOptions & request.CoreOptions} */
     const options = {
       url: requestURL,
-      headers: { Authorization: 'Bearer ' + token },
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json'},
       json: true,
+      dataType: 'json',
       body: {
-        body: { uris: tracks },
+        uris: tracks,
       },
     }
 
@@ -24,8 +25,6 @@ module.exports = async ({ token, deviceId, tracks }) =>
       if (error) {
         return reject(error)
       }
-
-      console.log(response)
 
       return resolve()
     })

@@ -9,14 +9,15 @@ module.exports = async ({ token, deviceId }) =>
     /** @type {request.UrlOptions & request.CoreOptions} */
     const options = {
       url: requestURL,
-      headers: { Authorization: 'Bearer ' + token },
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
       json: true,
+      dataType: 'json',
       body: {
-        body: { device_ids: [deviceId] },
+        device_ids: [deviceId]
       },
     }
 
-    request.post(options, function (error, response, body) {
+    request.put(options, function (error, response, body) {
       if (error) {
         return reject(error)
       }
