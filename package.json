@@ -1,22 +1,28 @@
 {
   "name": "nelson",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Spotify recommendations jukebox",
   "main": "server.js",
   "dependencies": {
     "bluebird": "^3.7.2",
     "express": "^4.15.4",
+    "express-async-handler": "^1.1.4",
     "querystring": "^0.2.0",
     "request": "^2.81.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/bluebird": "^3.5.32",
+    "@types/express": "^4.17.8",
+    "@types/request": "^2.48.5",
+    "prettier": "^2.1.2"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:arirawr/nelson.git"
+    "url": "git@github.com:derN3rd/nelson-v2.git"
   },
   "keywords": [
     "spotify",

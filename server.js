@@ -1,298 +1,138 @@
-var express = require('express'); // Express web server framework
-var request = require('request'); // "Request" library
-var querystring = require('querystring');
-const bluebird = require('bluebird');
+// @ts-check
 
-var app = express();
+const express = require('express')
+const request = require('request')
+const querystring = require('querystring')
+const bluebird = require('bluebird')
+const asyncHandler = require('express-async-handler')
 
-const spotifyBaseUrl = 'https://api.spotify.com/v1/';
+const chunkArray = require('./utils/chunkArray')
+const getTracks = require('./api/getTracks')
+const getUserId = require('./api/getUserId')
+const createPlaylist = require('./api/createPlaylist')
+const addTracksToPlaylist = require('./api/addTracksToPlaylist')
+const getOwnUser = require('./api/getOwnUser')
+const getDevices = require('./api/getDevices')
+const switchDevice = require('./api/switchDevice')
+const getGenres = require('./api/getGenres')
+const getRecommendations = require('./api/getRecommendations')
+const playTracks = require('./api/playTracks')
+const pausePlayer = require('./api/pausePlayer')
 
-const chunkArray = (
-  myArray,
-  chunkSize
-) => {
-  const results = []
+const { spotifyBaseUrl } = require('./config')
 
-  const arrayCopy = [...myArray]
-  while (arrayCopy.length) {
-    results.push(arrayCopy.splice(0, chunkSize))
-  }
+const app = express()
 
-  return results
-}
+app.use(express.static(__dirname + '/static/'))
 
-const getTracks = async ({ token, trackIds }) => new Promise((resolve, reject) => {
-  const requestURL = spotifyBaseUrl + 'tracks?' + 
-  querystring.stringify({
-    ids: trackIds.join(','),
-    market: 'from_token'
-  });
+app.get(
+  '/user',
+  asyncHandler(async (req, res) => {
+    const token = req.query.token
+    const me = await getOwnUser({ token })
 
-  let options = {
-    url: requestURL,
-    headers: { 'Authorization': 'Bearer ' + token },
-    json: true
-  };
-
-  request.get(options, function(error, response, body) {
-    if(error) {
-      return reject(error)
-    }
-    return resolve(body.tracks)
-  });
-})
-
-/** 
-  @returns {number} userId
-*/
-const getUserId = async ({ token }) => new Promise((resolve, reject) => {
-  // 1. Get user ID
-  let requestURL = spotifyBaseUrl + 'me';
-
-  let options = {
-    url: requestURL,
-    headers: { 'Authorization': 'Bearer ' + token },
-    json: true
-  };
-
-  request.get(options, function(error, response, body) {
-    if(error) {
-      return reject(error)
-    }
-    const userId = body.id;
-    
-    return resolve(userId);
+    return res.json(me)
   })
-})
+)
 
+app.get(
+  '/devices',
+  asyncHandler(async (req, res) => {
+    const token = req.query.token
+    const devices = await getDevices({ token })
 
-/** 
-  @returns {string} url of the playlist
-*/
-const createPlaylist = async ({ userId, token, genres, features }) => new Promise((resolve, reject) => {
-  const requestURL = spotifyBaseUrl + 'users/' + userId + '/playlists';
-
-  const options = {
-    url: requestURL,
-    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-    json: true,
-    dataType: 'json',
-    body: { "name": "Nelson Recommended Tracks", "description": "Recommended tracks based on " + genres + " with " + features }
-  };
-
-  request.post(options, function(error, response, body) {
-    if(error){
-      return reject(error)
-    }
-    
-    const playlistUrl = body.tracks.href;
-    
-    return resolve(playlistUrl);
+    return res.json(devices)
   })
-})
+)
 
-const addTracksToPlaylist = async ({ token, playlistUrl, tracks }) => new Promise((resolve, reject) => {
-  const requestURL = playlistUrl + '/?' +
-      querystring.stringify({
-        uris: tracks.join(',')
-      });
+app.post(
+  '/transfer',
+  asyncHandler(async (req, res) => {
+    const { device_id: deviceId, token } = req.query
+    await switchDevice({ deviceId, token })
 
-  const options = {
-    url: requestURL,
-    headers: { 'Authorization': 'Bearer ' + token },
-    json: true
-  };
+    return res.end()
+  })
+)
 
-  request.post(options, function(error, response, body) {
-    if(error) {
-      return reject(error)
-    }
-    
-    return resolve();
-  });
-})
+app.get(
+  '/genres',
+  asyncHandler(async (req, res) => {
+    const token = req.query.token
+    const availableGenres = await getGenres({ token })
 
+    return res.json(availableGenres)
+  })
+)
 
-app.use(express.static(__dirname + '/'));
-
-app.get('/user', function(req, res) {
-
-  let token = req.query.token;
-
-  let requestURL = spotifyBaseUrl + 'me';
-
-  let options = {
-    url: requestURL,
-    headers: { 'Authorization': 'Bearer ' + token },
-    json: true
-  };
-
-  request.get(options, function(error, response, body) {
-    res.json(body);
-  });
-});
-
-app.get('/devices', function(req, res) {
-
-  let token = req.query.token;
-
-  let requestURL = spotifyBaseUrl + 'me/player/devices';
-
-  let options = {
-    url: requestURL,
-    headers: { 'Authorization': 'Bearer ' + token },
-    json: true
-  };
-
-  request.get(options, function(error, response, body) {
-    res.json(body.devices);
-  });
-});
-
-app.post('/transfer', function(req, res) { 
-
-  let device_id = req.query.device_id;
-  let token = req.query.token;
-
-  let requestURL = spotifyBaseUrl + 'me/player';
-  
-  let options = {
-    url: requestURL,
-    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-    json: true,
-    dataType: 'json',
-    body: { "device_ids": [device_id] }
-  };
-  
-  request.put(options, function(error, response, body) {
-    res.sendStatus(200);
-  });
-});
-
-app.get('/genres', function(req, res) {
-
-  let token = req.query.token;
-
-  let requestURL = spotifyBaseUrl + 'recommendations/available-genre-seeds';
-
-  let options = {
-    url: requestURL,
-    headers: { 'Authorization': 'Bearer ' + token },
-    json: true
-  };
-
-  request.get(options, function(error, response, body) {
-    res.json(body.genres);
-  });
-});
-
-app.get('/recommendations', function(req, res) {
-  
-  // Get token and remove from query object
-  let token = req.query.token;
-  delete req.query.token;
-
-  let requestURL = spotifyBaseUrl + 'recommendations?' + 
-  querystring.stringify({
-    limit: 100,
-    market: 'from_token'
-  }) + '&' +
-  querystring.stringify(req.query);
-  
-  //console.log(requestURL, token)
-
-  let options = {
-    url: requestURL,
-    headers: { 'Authorization': 'Bearer ' + token },
-    json: true
-  };
-
-  request.get(options, function(error, response, body) {
-    //console.log(body)
-    res.json(body);
-  });
-});
-
-app.get('/tracks', function(req, res) {
-
-  let ids = req.query.ids;
-  let token = req.query.token;
-  
-  (async () => {
-    const splitIds = ids.split(',')
-    const chunkedIds = chunkArray(splitIds, 30)
-    
-    const tracksChunked = await bluebird.mapSeries(chunkedIds, ids => getTracks({ token, trackIds: ids }))
-    const allTracks = tracksChunked.reduce((acc, curr) => [...acc,...curr] ,[])
-    return res.json(allTracks)
-  })().catch(e => res.sendStatus(500))
-});
-
-app.post('/playlist', function(req, res) {
-
-  let tracks = req.query.tracks;
-  let genres = req.query.genres;
-  let token = req.query.token;
-  let features = req.query.features;
-  let userId, playlistUrl;
-  
-  (async () => {
-    const userId = await getUserId({ token });
-    const playlistUrl = await createPlaylist({ userId, token, genres, features });
-    const splitTracks = tracks.split(',')
-    
-    const chunkedTracks = chunkArray(splitTracks, 30)
-    
-    await bluebird.mapSeries(chunkedTracks, async tracks => {
-      return addTracksToPlaylist({ token, playlistUrl, tracks })
+app.get(
+  '/recommendations',
+  asyncHandler(async (req, res) => {
+    const { token, ...recommendationSettings } = req.query
+    const recommendations = await getRecommendations({
+      token,
+      recommendationSettings,
     })
-    
-  })().then(() => {
-    res.sendStatus(200);
-  }).catch(e => {
-    res.sendStatus(500);
+
+    return res.json(recommendations)
   })
-});
+)
 
-app.post('/play', function(req, res) {
-  let tracks = req.query.tracks;
-  let device_id = req.query.device_id;
-  let token = req.query.token;
+app.get(
+  '/tracks',
+  asyncHandler(async (req, res) => {
+    const { ids, token } = req.query
+    const tracks = await getTracks({ token, trackIds: ids })
 
-  let requestURL = spotifyBaseUrl + 'me/player/play?' +
-  querystring.stringify({
-    device_id: device_id
-  });
+    return res.json(tracks)
+  })
+)
 
-  let options = {
-    url: requestURL,
-    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-    json: true,
-    dataType: 'json',
-    body: { "uris": tracks.split(',') }
-  };
+app.post(
+  '/playlist',
+  asyncHandler(async (req, res) => {
+    const { tracks: _tracks, genres, token, features } = req.query
+    const tracks = `${_tracks}`.split(',')
 
-  request.put(options, function(error, response, body) {
-    res.sendStatus(200);
-  });
-});
+    const userId = await getUserId({ token })
+    const playlistUrl = await createPlaylist({
+      userId,
+      token,
+      genres,
+      features,
+    })
+    await addTracksToPlaylist({ token, playlistUrl, tracks })
 
-app.post('/pause', function(req, res) {
-  let token = req.query.token;
+    return res.end()
+  })
+)
 
-  let requestURL = spotifyBaseUrl + 'me/player/pause';
+app.post(
+  '/play',
+  asyncHandler(async (req, res) => {
+    const { tracks: _tracks, device_id: deviceId, token } = req.query
+    const tracks = `${_tracks}`.split(',')
 
-  let options = {
-    url: requestURL,
-    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-    json: true,
-    dataType: 'json',
-  };
+    await playTracks({ tracks, deviceId, token })
 
-  request.put(options, function(error, response, body) {
-    res.sendStatus(200);
-  });
-});
+    return res.end()
+  })
+)
 
-console.log('Listening on 8888');
-app.listen(8888);
+app.post(
+  '/pause',
+  asyncHandler(async (req, res) => {
+    const token = req.query.token
+
+    await pausePlayer({ token })
+
+    return res.end()
+  })
+)
+
+const port = Number(process.env.PORT) || 8888
+
+console.log(
+  `Listening on http://localhost:${port} or https://nelson-v2.glitch.me`
+)
+app.listen(port)
