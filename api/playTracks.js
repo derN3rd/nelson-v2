@@ -20,10 +20,12 @@ module.exports = async ({ token, deviceId, tracks }) =>
       },
     }
 
-    request.post(options, function (error, response, body) {
+    request.put(options, function (error, response, body) {
       if (error) {
         return reject(error)
       }
+
+      console.log(response)
 
       return resolve()
     })

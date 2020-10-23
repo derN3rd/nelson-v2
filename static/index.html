@@ -14,23 +14,14 @@
   </head>
   <body>
     <div class="nelson">
-      
-      <!-- Twitter Follow Button -->
-      <div style="position:absolute;top:0;right:0;margin:20px;">
-        <a href="https://twitter.com/imariari?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-size="large" data-show-count="false">Follow @imariari</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-      </div>
-      
       <!-- Alerts -->
       <p>
-        <i style="font-size:11px">This is a personal hack project on Spotify's public APIs and SDKs and does not represent Spotify.</i>
+        <i style="font-size:11px">This is a personal hack project on Spotify's public APIs and SDKs and does not represent Spotify. <a href="https://nelson.glitch.me">Original project from imariari</a></i>
       </p>
-      <div class="alert alert-info" role="alert">Like the project? It uses the Spotify <a href="https://beta.developer.spotify.com/documentation/web-api/reference/browse/get-recommendations/">Recommendations API</a> and <a href="https://beta.developer.spotify.com/documentation/web-playback-sdk/">Web Playback SDK</a>. Try it yourself!</div>
       <div id="notice"></div>
       
       <!-- Main App -->
       <div class="body">
-        <button class="btn btn-aubergine btn-lg space-after" onclick="makePlaylist();">Make Playlist</button>
-        
         <span class="pull-right">
           <span>Logged in as <span id="current-user"></span></span>
           <button class="btn btn-secondary btn-sm" onclick="logout();">Logout</button>
@@ -73,14 +64,14 @@
         
         <div>
           <h5>Mode</h5>
-          <div class="checkbox-inline" onclick="getRecommendations();">
+          <div class="checkbox-inline" onclick="saveSliderValues()">
             <label>
               <input id="mode-major" type="checkbox" value="1" checked>
               Major
               <span class="control-indicator"></span>
             </label>
           </div>
-          <div class="checkbox-inline" onclick="getRecommendations();">
+          <div class="checkbox-inline" onclick="saveSliderValues()">
             <label>
               <input id="mode-minor" type="checkbox" value="0" checked>
               Minor
@@ -96,21 +87,21 @@
           <h5>Instrumentalness</h5><div id="instrumentalness-slider"></div>
           <h5>Liveness</h5><div id="liveness-slider"></div>
           <h5>Speechiness</h5><div id="speechiness-slider"></div>
-          <h6>
-            Read about what all these audio features mean <a href="https://beta.developer.spotify.com/documentation/web-api/reference/tracks/get-audio-features/#audio-features-object">here</a>.
-          </h6>
         </div>
+        <br />
+        <button class="btn btn-green btn-lg space-after" onclick="getRecommendations();">Generate Playlist</button>
+        <button class="btn btn-aubergine btn-lg space-after" onclick="makePlaylist();">Save Playlist</button>
         
       </div><!-- /.body -->
       
       <div id="tracks">
-        <h4>Select some genres to get recommendations</h4>
+        <h4>Select some genres and click on generate to get recommendations</h4>
         <!-- Tracks to be appended here -->
       </div>
       
     </div><!-- /.nelson -->
     
-    <div class="alert alert-info" role="alert">My source code is on <a href="https://glitch.com/edit/#!/nelson">Glitch!</a></div>
+    <div class="alert alert-info" role="alert">My source code is on <a href="https://glitch.com/edit/#!/nelson-v2">Glitch!</a> (Original source code by <a href="https://twitter.com/imariari">@imariari</a> is also on <a href="https://glitch.com/edit/#!/nelson">Glitch!</a>)</div>
 
     <!-- Modals! -->
     
@@ -136,7 +127,7 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-aubergine" data-dismiss="modal" onclick="getRecommendations();">Okay!</button>
+            <button type="button" class="btn btn-aubergine" data-dismiss="modal" onclick="updateSelectedGenres();">Okay!</button>
           </div>
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->

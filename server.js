@@ -82,7 +82,8 @@ app.get(
   '/tracks',
   asyncHandler(async (req, res) => {
     const { ids, token } = req.query
-    const tracks = await getTracks({ token, trackIds: ids })
+    const trackIds = `${ids}`.split(',')
+    const tracks = await getTracks({ token, trackIds })
 
     return res.json(tracks)
   })
